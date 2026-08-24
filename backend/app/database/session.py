@@ -16,9 +16,23 @@ from sqlalchemy.orm import declarative_base
 from app.core.config import settings
 
 
+def _make_async_url(url: str) -> str:
+    """
+    Ensure the database URL uses the asyncpg driver.
+
+    Handles both postgresql:// and postgresql+asyncpg:// inputs safely.
+    """
+    if url.startswith("postgresql+asyncpg://"):
+        return url
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # Already correct or uses another scheme
+    return url
+
+
 # Create async engine
 engine = create_async_engine(
-    settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
+    _make_async_url(settings.DATABASE_URL),
     echo=settings.DEBUG,
     pool_size=settings.DATABASE_POOL_SIZE,
     max_overflow=settings.DATABASE_MAX_OVERFLOW,
@@ -41,7 +55,7 @@ Base = declarative_base()
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency for getting database sessions.
-    
+
     Usage:
         @app.get("/items")
         async def get_items(db: AsyncSession = Depends(get_db)):

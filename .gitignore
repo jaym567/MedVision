@@ -83,3 +83,31 @@ models/
 *.onnx
 *.h5
 *.pb
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+backend/venv/
+frontend/node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Environment
+.env
+.env.local

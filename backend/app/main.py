@@ -19,30 +19,27 @@ from fastapi.responses import JSONResponse
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging, logger
-from app.database.session import engine, Base
+from app.database.session import engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     """
     Application lifespan manager.
-    
+
     Handles startup and shutdown events:
-    - Database table creation
     - Connection pool management
     - Resource cleanup
+
+    Note: Database schema is managed via Alembic migrations.
+    Do NOT run create_all here — it conflicts with existing indexes.
     """
     # Startup
     logger.info("Starting MedVision AI Backend", environment=settings.APP_ENV)
-    
-    # Create database tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
-    logger.info("Database tables created/verified")
-    
+    logger.info("Database schema managed by Alembic migrations")
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down MedVision AI Backend")
     await engine.dispose()

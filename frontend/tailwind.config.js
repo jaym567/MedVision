@@ -7,6 +7,9 @@ export default {
     theme: {
         extend: {
             colors: {
+                // Add this so `border-border` works globally
+                border: "hsl(var(--border))",
+
                 // Medical imaging workstation color palette
                 primary: {
                     50: '#f0f9ff',

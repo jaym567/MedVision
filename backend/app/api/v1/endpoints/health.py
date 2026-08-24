@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/health",
+    "",
     response_model=Dict[str, Any],
     status_code=status.HTTP_200_OK,
 )
@@ -29,20 +29,20 @@ async def health_check(
 ) -> Dict[str, Any]:
     """
     Health check endpoint.
-    
+
     Returns:
         - Application status
         - Service information
         - Database connectivity
         - Environment info
-        
+
     Used by:
         - Docker health checks
         - Kubernetes liveness/readiness probes
         - Load balancers
         - Monitoring systems
     """
-    
+
     # Check database connectivity
     db_status = "healthy"
     try:
@@ -50,9 +50,9 @@ async def health_check(
     except Exception as e:
         db_status = "unhealthy"
         logger.error("Database health check failed", error=str(e))
-    
+
     return {
-        "status": "ok",
+        "status": "healthy",
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "environment": settings.APP_ENV,
@@ -61,7 +61,7 @@ async def health_check(
 
 
 @router.get(
-    "/health/ready",
+    "/ready",
     response_model=Dict[str, bool],
     status_code=status.HTTP_200_OK,
 )
@@ -70,11 +70,11 @@ async def readiness_check(
 ) -> Dict[str, bool]:
     """
     Readiness probe endpoint.
-    
+
     Returns whether the service is ready to accept traffic.
     Used by Kubernetes readiness probes.
     """
-    
+
     try:
         await db.execute(text("SELECT 1"))
         return {"ready": True}
@@ -83,14 +83,14 @@ async def readiness_check(
 
 
 @router.get(
-    "/health/live",
+    "/live",
     response_model=Dict[str, bool],
     status_code=status.HTTP_200_OK,
 )
 async def liveness_check() -> Dict[str, bool]:
     """
     Liveness probe endpoint.
-    
+
     Returns whether the service is alive.
     Used by Kubernetes liveness probes.
     """

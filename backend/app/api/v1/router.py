@@ -1,25 +1,26 @@
-"""
-API v1 Router
-
-Aggregates all API v1 endpoints.
-Future endpoints (auth, studies, models, reports) will be added here.
-"""
-
+# backend/app/api/v1/router.py
 from fastapi import APIRouter
-
-from app.api.v1.endpoints import health
-
+from app.api.v1.endpoints import health, auth, studies
 
 api_router = APIRouter()
 
-# Include endpoint routers
+# Health check endpoint
 api_router.include_router(
     health.router,
-    tags=["Health"],
+    prefix="/health",
+    tags=["Health"]
 )
 
-# Future routers will be added here:
-# api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-# api_router.include_router(studies.router, prefix="/studies", tags=["Studies"])
-# api_router.include_router(models.router, prefix="/models", tags=["AI Models"])
-# api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
+# Authentication endpoints
+api_router.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["Authentication"]
+)
+
+# Studies endpoints
+api_router.include_router(
+    studies.router,
+    prefix="/studies",
+    tags=["Studies"]
+)

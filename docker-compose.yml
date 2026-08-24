@@ -28,11 +28,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: medvision-backend
+    env_file: ./backend/.env
     restart: unless-stopped
     environment:
       - APP_ENV=${APP_ENV:-development}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-medvision}:${POSTGRES_PASSWORD:-medvision_dev_password}@postgres:5432/${POSTGRES_DB:-medvision_db}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     ports:
       - "8000:8000"
