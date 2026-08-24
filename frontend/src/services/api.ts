@@ -1,52 +1,104 @@
-import axios from 'axios'
+// frontend/src/services/api.ts (UPDATED)
+/**
+ * Base API client with JWT authentication and error handling
+ */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+import axios, {
+  AxiosInstance,
+  AxiosError,
+  InternalAxiosRequestConfig,
+  AxiosResponse
+} from "axios";
+import { ApiError } from "../types/api";
 
-const axiosInstance = axios.create({
-    baseURL: `${API_BASE_URL}/api/v1`,
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-})
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 
-// Request interceptor for adding auth tokens
-axiosInstance.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('access_token')
+// Create axios instance
+const apiClient: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 30000, // 30 seconds
+});
+
+/**
+ * Request interceptor to attach JWT token
+ */
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // Get token from localStorage (Zustand persist storage)
+    const authData = localStorage.getItem("auth-storage");
+
+    if (authData) {
+      try {
+        const parsed = JSON.parse(authData);
+        const token = parsed.state?.accessToken;
+
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`
+          config.headers.Authorization = `Bearer ${token}`;
         }
-        return config
-    },
-    (error) => Promise.reject(error)
-)
-
-// Response interceptor for error handling
-axiosInstance.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('access_token')
-            window.location.href = '/login'
-        }
-        return Promise.reject(error)
+      } catch (error) {
+        console.error("Failed to parse auth data:", error);
+      }
     }
-)
 
-// API client with typed methods
-export const apiClient = {
-    // Health endpoints
-    async getHealth() {
-        const { data } = await axiosInstance.get('/health')
-        return data
-    },
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
-    // Future endpoints will be added here:
-    // - Authentication
-    // - Studies
-    // - AI Models
-    // - Reports
+/**
+ * Response interceptor to handle errors globally
+ */
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    return response;
+  },
+  (error: AxiosError<ApiError>) => {
+    // Handle 401 Unauthorized - clear auth and redirect to login
+    if (error.response?.status === 401) {
+      // Clear auth storage
+      localStorage.removeItem("auth-storage");
+
+      // Only redirect if not already on login/register page
+      const publicPaths = ['/login', '/register'];
+      const currentPath = window.location.pathname;
+
+      if (!publicPaths.includes(currentPath)) {
+        window.location.href = "/login";
+      }
+    }
+
+    // Normalize error response
+    const apiError: ApiError = {
+      detail: error.response?.data?.detail || error.message || "An unexpected error occurred",
+      status: error.response?.status,
+    };
+
+    return Promise.reject(apiError);
+  }
+);
+
+export default apiClient;
+
+/**
+ * Type-safe API request wrapper
+ */
+export async function apiRequest<T>(
+  method: "get" | "post" | "patch" | "delete",
+  url: string,
+  data?: any,
+  config?: any
+): Promise<T> {
+  const response = await apiClient.request<T>({
+    method,
+    url,
+    data,
+    ...config,
+  });
+  return response.data;
 }
-
-export default axiosInstance

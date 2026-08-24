@@ -1,65 +1,125 @@
-import { Activity } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+// frontend/src/pages/Login.tsx
+/**
+ * Login page with authentication form
+ */
 
-export function Login() {
-    const navigate = useNavigate()
+import { useState, FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { useLogin } from '@/hooks/useAuth';
+import FormInput from '@/components/FormInput';
+import FormButton from '@/components/FormButton';
+import { isValidEmail } from '@/utils/validation';
 
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault()
-        // TODO: Implement authentication
-        navigate('/dashboard')
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const loginMutation = useLogin();
+
+  const validateForm = (): boolean => {
+    const newErrors: { email?: string; password?: string } = {};
+
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!isValidEmail(email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-950">
-            <div className="w-full max-w-md">
-                <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <Activity className="w-10 h-10 text-primary-500" />
-                        <h1 className="text-3xl font-bold">MedVision AI</h1>
-                    </div>
-                    <p className="text-slate-400">
-                        Medical Imaging Workstation
-                    </p>
-                </div>
+    if (!password) {
+      newErrors.password = 'Password is required';
+    }
 
-                <div className="bg-slate-900 rounded-lg p-8 border border-slate-800">
-                    <form onSubmit={handleLogin} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                Username
-                            </label>
-                            <input
-                                type="text"
-                                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                placeholder="Enter username"
-                            />
-                        </div>
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                Password
-                            </label>
-                            <input
-                                type="password"
-                                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                placeholder="Enter password"
-                            />
-                        </div>
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
 
-                        <button
-                            type="submit"
-                            className="w-full px-4 py-2 bg-primary-600 hover:bg-primary-700 rounded-md font-medium transition-colors"
-                        >
-                            Sign In
-                        </button>
-                    </form>
+    if (!validateForm()) {
+      return;
+    }
 
-                    <p className="text-center text-sm text-slate-500 mt-6">
-                        Authentication will be implemented in the next phase
-                    </p>
-                </div>
-            </div>
+    loginMutation.mutate({
+      email: email.toLowerCase().trim(),
+      password,
+    });
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      <div className="max-w-md w-full space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-white mb-2">
+            MedVision AI
+          </h1>
+          <p className="text-gray-400">
+            Medical Imaging Workstation
+          </p>
         </div>
-    )
+
+        {/* Login Form */}
+        <div className="bg-gray-800 rounded-lg shadow-xl p-8 border border-gray-700">
+          <h2 className="text-2xl font-semibold text-white mb-6">
+            Sign In
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormInput
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              error={errors.email}
+              placeholder="dr.smith@hospital.com"
+              required
+              disabled={loginMutation.isPending}
+              autoComplete="email"
+            />
+
+            <FormInput
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              error={errors.password}
+              placeholder="Enter your password"
+              required
+              disabled={loginMutation.isPending}
+              autoComplete="current-password"
+            />
+
+            <FormButton
+              type="submit"
+              variant="primary"
+              fullWidth
+              isLoading={loginMutation.isPending}
+            >
+              Sign In
+            </FormButton>
+          </form>
+
+          {/* Register Link */}
+          <div className="mt-6 text-center">
+            <p className="text-gray-400 text-sm">
+              Don't have an account?{' '}
+              <Link
+                to="/register"
+                className="text-blue-400 hover:text-blue-300 font-medium"
+              >
+                Register here
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-gray-500 text-sm">
+          <p>Sprint 3: Secure Frontend Study Workstation</p>
+        </div>
+      </div>
+    </div>
+  );
 }

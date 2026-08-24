@@ -1,55 +1,94 @@
+// frontend/src/pages/Dashboard.tsx
 import { useQuery } from '@tanstack/react-query'
-import { apiClient } from '@/services/api'
+import apiClient from '@/services/api'  // Changed from named to default import
 
-export function Dashboard() {
-    const { data: healthData, isLoading } = useQuery({
-        queryKey: ['health'],
-        queryFn: () => apiClient.getHealth(),
-    })
+interface HealthResponse {
+  status: string
+  database: string
+  timestamp: string
+}
 
+export default function Dashboard() {
+  const { data, isLoading, error } = useQuery<HealthResponse>({
+    queryKey: ['health'],
+    queryFn: async () => {
+      const response = await apiClient.get<HealthResponse>('/health')
+      return response.data
+    },
+  })
+
+  if (isLoading) {
     return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-2xl font-bold">Dashboard</h2>
-                <p className="text-slate-400 mt-1">
-                    Welcome to MedVision AI Medical Imaging Workstation
-                </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-slate-900 rounded-lg p-6 border border-slate-800">
-                    <h3 className="text-sm font-medium text-slate-400">System Status</h3>
-                    <p className="text-2xl font-semibold mt-2">
-                        {isLoading ? 'Loading...' : healthData?.status === 'ok' ? 'Healthy' : 'Degraded'}
-                    </p>
-                </div>
-
-                <div className="bg-slate-900 rounded-lg p-6 border border-slate-800">
-                    <h3 className="text-sm font-medium text-slate-400">Environment</h3>
-                    <p className="text-2xl font-semibold mt-2 capitalize">
-                        {isLoading ? 'Loading...' : healthData?.environment || 'Unknown'}
-                    </p>
-                </div>
-
-                <div className="bg-slate-900 rounded-lg p-6 border border-slate-800">
-                    <h3 className="text-sm font-medium text-slate-400">Version</h3>
-                    <p className="text-2xl font-semibold mt-2">
-                        {isLoading ? 'Loading...' : healthData?.version || 'N/A'}
-                    </p>
-                </div>
-            </div>
-
-            <div className="bg-slate-900 rounded-lg p-6 border border-slate-800">
-                <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-2 gap-4">
-                    <button className="px-4 py-3 bg-primary-600 hover:bg-primary-700 rounded-md font-medium transition-colors">
-                        Upload Study
-                    </button>
-                    <button className="px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-md font-medium transition-colors">
-                        View Recent Studies
-                    </button>
-                </div>
-            </div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
     )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500">
+          Error loading health data: {error instanceof Error ? error.message : 'Unknown error'}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold mb-8">MedVision AI Dashboard</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl font-semibold mb-4">System Health</h2>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Status:</span>
+              <span className={`font-semibold ${
+                data?.status === 'healthy' ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {data?.status || 'Unknown'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Database:</span>
+              <span className={`font-semibold ${
+                data?.database === 'healthy' ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {data?.database || 'Unknown'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Last Check:</span>
+              <span className="text-sm text-gray-300">
+                {data?.timestamp ? new Date(data.timestamp).toLocaleTimeString() : 'N/A'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl font-semibold mb-4">Quick Stats</h2>
+          <div className="space-y-2 text-gray-400">
+            <p>Coming in Sprint 3</p>
+            <p className="text-sm">• Total Studies</p>
+            <p className="text-sm">• Active Users</p>
+            <p className="text-sm">• Recent Activity</p>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl font-semibold mb-4">Features</h2>
+          <div className="space-y-2 text-gray-400">
+            <p className="text-sm">✅ Health Monitoring</p>
+            <p className="text-sm">✅ Authentication (Sprint 2)</p>
+            <p className="text-sm">✅ Study Management (Sprint 2)</p>
+            <p className="text-sm">🔜 DICOM Viewer (Sprint 4)</p>
+            <p className="text-sm">🔜 AI Analysis (Sprint 6)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
