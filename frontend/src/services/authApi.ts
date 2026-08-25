@@ -20,7 +20,7 @@ import { UserRead, CurrentUser } from '@/types/user';
 export async function register(
   userData: UserRegisterRequest
 ): Promise<UserRead> {
-  const response = await apiClient.post<UserRead>('/auth/register', userData);
+  const response = await apiClient.post<UserRead>('api/v1/auth/register', userData);
   return response.data;
 }
 
@@ -31,7 +31,7 @@ export async function register(
  */
 export async function login(credentials: LoginRequest): Promise<TokenResponse> {
   const response = await apiClient.post<TokenResponse>(
-    '/auth/login',
+    'api/v1/auth/login',
     credentials
   );
   return response.data;
@@ -43,7 +43,7 @@ export async function login(credentials: LoginRequest): Promise<TokenResponse> {
  * @returns Current user data
  */
 export async function getCurrentUser(): Promise<CurrentUser> {
-  const response = await apiClient.get<CurrentUser>('/auth/me');
+  const response = await apiClient.get<CurrentUser>('api/v1/auth/me');
   return response.data;
 }
 

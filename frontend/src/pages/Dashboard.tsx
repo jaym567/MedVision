@@ -12,7 +12,7 @@ export default function Dashboard() {
   const { data, isLoading, error } = useQuery<HealthResponse>({
     queryKey: ['health'],
     queryFn: async () => {
-      const response = await apiClient.get<HealthResponse>('/health')
+      const response = await apiClient.get<HealthResponse>('api/v1/health')
       return response.data
     },
   })
