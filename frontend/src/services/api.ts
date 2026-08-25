@@ -11,8 +11,9 @@ import axios, {
 } from "axios";
 import { ApiError } from "../types/api";
 
-// Get API base URL from environment
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+// Base URL is a relative path — the Vite dev proxy forwards /api/* to http://localhost:8000
+// This avoids all Axios baseURL path-stripping issues and CORS problems.
+const API_BASE_URL = "/api/v1";
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -24,18 +25,15 @@ const apiClient: AxiosInstance = axios.create({
 });
 
 /**
- * Request interceptor to attach JWT token
+ * Request interceptor: attach JWT token from Zustand persisted auth store.
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage (Zustand persist storage)
     const authData = localStorage.getItem("auth-storage");
-
     if (authData) {
       try {
         const parsed = JSON.parse(authData);
         const token = parsed.state?.accessToken;
-
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -43,7 +41,6 @@ apiClient.interceptors.request.use(
         console.error("Failed to parse auth data:", error);
       }
     }
-
     return config;
   },
   (error) => {
@@ -76,7 +73,6 @@ apiClient.interceptors.response.use(
     // Normalize error response
     const apiError: ApiError = {
       detail: error.response?.data?.detail || error.message || "An unexpected error occurred",
-      status: error.response?.status,
     };
 
     return Promise.reject(apiError);

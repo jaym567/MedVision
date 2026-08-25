@@ -1,8 +1,4 @@
 // frontend/src/types/api.ts
-/**
- * Base API types for error handling and pagination
- */
-
 export interface ApiError {
   detail: string;
   status?: number;
@@ -13,10 +9,7 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   page_size: number;
-  total_pages: number;
+  pages: number;
 }
 
-export interface ApiResponse<T> {
-  data: T;
-  error?: ApiError;
-}
+export type ApiResponse<T> = T | ApiError;

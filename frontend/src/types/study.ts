@@ -1,91 +1,95 @@
 // frontend/src/types/study.ts
-/**
- * Study types matching backend schemas
- */
-
-import { PatientCreate, PatientSummary, PatientRead } from "./patient";
-import { UserSummary } from "./user";
-import { PaginatedResponse } from "./api";
+import type { UserSummary } from './user';
 
 export enum StudyModality {
-  DX = "DX",
-  CR = "CR",
-  CT = "CT",
-  MR = "MR",
-  US = "US",
-  XA = "XA",
-  NM = "NM",
-  PT = "PT",
-  OTHER = "OTHER"
+  DX = 'DX',
+  CR = 'CR',
+  CT = 'CT',
+  MR = 'MR',
+  US = 'US',
+  XA = 'XA',
+  NM = 'NM',
+  PT = 'PT',
+  OTHER = 'OTHER',
 }
 
 export enum StudyStatus {
-  CREATED = "created",
-  UPLOADED = "uploaded",
-  PROCESSING = "processing",
-  READY = "ready",
-  FAILED = "failed",
-  ARCHIVED = "archived"
+  CREATED = 'created',
+  UPLOADED = 'uploaded',
+  PROCESSING = 'processing',
+  READY = 'ready',
+  FAILED = 'failed',
+  ARCHIVED = 'archived',
+}
+
+export interface PatientInfo {
+  mrn: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  sex: 'M' | 'F' | 'O';
+  medical_history?: string;
 }
 
 export interface StudyCreate {
-  accession_number: string;
   modality: StudyModality;
-  body_part?: string;
-  study_description: string;
-  study_date: string; // ISO date string
-  metadata_json?: Record<string, any>;
+  body_part_examined?: string;
+  study_description?: string;
+  study_date: string;
+  accession_number?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface StudyCreateRequest {
-  patient: PatientCreate;
+  patient: PatientInfo;
   study: StudyCreate;
 }
 
 export interface StudyUpdate {
-  accession_number?: string;
-  modality?: StudyModality;
-  body_part?: string;
-  study_description?: string;
-  study_date?: string;
   status?: StudyStatus;
-  metadata_json?: Record<string, any>;
-}
-
-export interface StudyRead {
-  id: string;
-  patient_id: string;
-  created_by_user_id: string;
-  study_instance_uid: string | null;
-  accession_number: string;
-  modality: StudyModality;
-  body_part: string | null;
-  study_description: string;
-  study_date: string;
-  status: StudyStatus;
-  source: string;
-  metadata_json: Record<string, any> | null;
-  storage_path: string | null;
-  created_at: string;
-  updated_at: string;
-  patient: PatientRead;
-  created_by_user: UserSummary;
+  body_part_examined?: string;
+  study_description?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface StudySummary {
   id: string;
-  accession_number: string;
   modality: StudyModality;
-  body_part: string | null;
-  study_description: string;
+  body_part_examined?: string;
+  study_description?: string;
   study_date: string;
   status: StudyStatus;
+  patient_id: string;
+  patient_mrn: string;
+  patient_first_name: string;
+  patient_last_name: string;
   created_at: string;
-  patient: PatientSummary;
 }
 
-export interface StudyListResponse extends PaginatedResponse<StudySummary> {
-  // Inherits: items, total, page, page_size, total_pages
+export interface StudyRead extends StudySummary {
+  accession_number?: string;
+  metadata?: Record<string, any>;
+  created_by_id: string;
+  updated_at: string;
+  patient: {
+    id: string;
+    mrn: string;
+    first_name: string;
+    last_name: string;
+    date_of_birth: string;
+    sex: 'M' | 'F' | 'O';
+    medical_history?: string;
+    display_name: string;
+  };
+  created_by: UserSummary;
+}
+
+export interface StudyListResponse {
+  items: StudySummary[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
 }
 
 export interface StudyFilters {
@@ -95,6 +99,6 @@ export interface StudyFilters {
   modality?: StudyModality;
   status?: StudyStatus;
   patient_name?: string;
-  date_from?: string; // ISO date string
-  date_to?: string; // ISO date string
+  date_from?: string;
+  date_to?: string;
 }
