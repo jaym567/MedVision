@@ -5,7 +5,7 @@
 
 import { Toaster } from 'react-hot-toast';
 
-export default function ToastProvider() {
+export function ToastProvider() {
   return (
     <Toaster
       position="top-right"
@@ -36,3 +36,5 @@ export default function ToastProvider() {
     />
   );
 }
+
+export default ToastProvider;

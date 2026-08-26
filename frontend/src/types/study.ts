@@ -1,6 +1,4 @@
 // frontend/src/types/study.ts
-import type { UserSummary } from './user';
-
 export enum StudyModality {
   DX = 'DX',
   CR = 'CR',
@@ -66,10 +64,19 @@ export interface StudySummary {
   created_at: string;
 }
 
-export interface StudyRead extends StudySummary {
+export interface StudyRead {
+  id: string;
+  modality: StudyModality;
+  body_part?: string; // Backend uses body_part, not body_part_examined
+  study_description?: string;
+  study_date: string;
+  status: StudyStatus;
   accession_number?: string;
-  metadata?: Record<string, any>;
-  created_by_id: string;
+  metadata_json?: Record<string, any>; // Backend uses metadata_json
+  study_instance_uid?: string;
+  source?: string;
+  storage_path?: string;
+  created_at: string;
   updated_at: string;
   patient: {
     id: string;
@@ -79,9 +86,14 @@ export interface StudyRead extends StudySummary {
     date_of_birth: string;
     sex: 'M' | 'F' | 'O';
     medical_history?: string;
-    display_name: string;
+    created_at: string;
+    updated_at: string;
   };
-  created_by: UserSummary;
+  created_by_user: { // Backend uses created_by_user, not created_by
+    id: string;
+    email: string;
+    full_name: string;
+  };
 }
 
 export interface StudyListResponse {
