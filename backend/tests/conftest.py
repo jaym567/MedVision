@@ -56,6 +56,40 @@ async def test_db(test_engine) -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest_asyncio.fixture
+async def db_session(test_db) -> AsyncSession:
+    """Alias for test_db fixture."""
+    return test_db
+
+
+@pytest_asyncio.fixture
+async def test_user(test_db: AsyncSession) -> dict:
+    """Create a test user and return dictionary with user object and JWT token."""
+    from app.models.user import User
+    from app.core.security import hash_password, create_access_token
+
+    user = User(
+        email="test_user@example.com",
+        password_hash=hash_password("Password123!"),
+        full_name="Test User",
+        role="radiologist",
+        is_active=True,
+        is_verified=True,
+    )
+    test_db.add(user)
+    await test_db.commit()
+    await test_db.refresh(user)
+
+    token = create_access_token({"sub": str(user.id)})
+
+    return {
+        "user": user,
+        "token": token,
+        "email": user.email,
+        "id": user.id,
+    }
+
+
+@pytest_asyncio.fixture
 async def client(test_db) -> AsyncGenerator[AsyncClient, None]:
     """Create test HTTP client."""
     

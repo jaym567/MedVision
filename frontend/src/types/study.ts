@@ -96,6 +96,8 @@ export interface StudyRead {
   };
 }
 
+export type Study = StudyRead;
+
 export interface StudyListResponse {
   items: StudySummary[];
   total: number;

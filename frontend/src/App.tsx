@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import Studies from './pages/Studies';
 import CreateStudy from './pages/CreateStudy';
 import StudyDetail from './pages/StudyDetail';
+import { UploadDicom } from './pages/UploadDicom';
 import { useAuthStore } from './stores/authStore';
 
 const queryClient = new QueryClient({
@@ -65,6 +66,28 @@ function App() {
                 <ProtectedRoute>
                   <ProtectedLayout>
                     <Studies />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/studies/upload"
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <UploadDicom />
+                  </ProtectedLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/studies/create"
+              element={
+                <ProtectedRoute>
+                  <ProtectedLayout>
+                    <CreateStudy />
                   </ProtectedLayout>
                 </ProtectedRoute>
               }

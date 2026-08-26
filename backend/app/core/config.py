@@ -21,7 +21,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="ignore",
+        extra="ignore",  # Ignore unknown env vars so old .env keys don't break startup
     )
 
     # Application Settings
@@ -38,21 +38,25 @@ class Settings(BaseSettings):
 
     # Database Configuration
     DATABASE_URL: str = Field(
-        ...,
+        default="postgresql+asyncpg://medvision:medvision@localhost:5433/medvision",
         description="PostgreSQL connection string"
     )
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
 
-    # Security
-    JWT_SECRET_KEY: str = Field(..., min_length=32)
+    # Security — support both JWT_SECRET_KEY (legacy .env) and SECRET_KEY
+    JWT_SECRET_KEY: str = Field(default="change-me-in-production-min-32-chars!!", alias_priority=1)
+    SECRET_KEY: str = Field(default="")  # fallback alias; resolved in property
     JWT_ALGORITHM: str = "HS256"
+    ALGORITHM: str = "HS256"  # alias for JWT_ALGORITHM
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Storage
-    LOCAL_STORAGE_ROOT: str = "/app/storage"
-    MAX_UPLOAD_SIZE_MB: int = 500
+    STORAGE_BACKEND: Literal["local"] = "local"
+    LOCAL_STORAGE_ROOT: str = "./storage"
+    DICOM_STORAGE_PATH: str = "dicom"
+    MAX_UPLOAD_SIZE_MB: int = 100
 
     # AI Configuration (Future)
     ENABLE_MOCK_MODELS: bool = True
@@ -67,10 +71,6 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = 0.3
     LLM_MAX_TOKENS: int = 2000
 
-    # RAG Configuration (Future)
-    ENABLE_RAG: bool = False
-    VECTOR_DB_PATH: str = "/app/vector_db"
-
     # Logging
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     ENABLE_METRICS: bool = True
@@ -82,6 +82,16 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",")]
         return v
+
+    @property
+    def effective_secret_key(self) -> str:
+        """Return whichever secret key is configured."""
+        return self.JWT_SECRET_KEY or self.SECRET_KEY
+
+    @property
+    def effective_algorithm(self) -> str:
+        """Return whichever algorithm is configured."""
+        return self.JWT_ALGORITHM or self.ALGORITHM
 
     @property
     def is_production(self) -> bool:

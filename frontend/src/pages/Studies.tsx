@@ -1,13 +1,14 @@
 // frontend/src/pages/Studies.tsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStudies } from '../hooks/useStudies';
 import { StudyModality, StudyStatus, StudyFilters } from '../types/study';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
 import StatusBadge from '../components/StatusBadge';
+import FormButton from '../components/FormButton';
 import { formatPatientName, formatMRN, formatModality } from '../utils/formatting';
 import { formatDate } from '../utils/date';
 
@@ -32,12 +33,12 @@ const Studies: React.FC = () => {
     setFilters((prev) => ({ ...prev, page: newPage }));
   };
 
-  const handleCreateStudy = () => {
-    navigate('/studies/new');
+  const handleStudyClick = (studyId: string) => {
+    navigate(`/studies/${studyId}`);
   };
 
-  const handleViewStudy = (id: string) => {
-    navigate(`/studies/${id}`);
+  const handleCreateStudy = () => {
+    navigate('/studies/create');
   };
 
   if (isLoading) {
@@ -53,8 +54,8 @@ const Studies: React.FC = () => {
       <div className="p-6">
         <ErrorState
           title="Failed to load studies"
-          message={error.message || 'An error occurred while loading studies'}
-          onRetry={() => refetch()}
+          message={error.message || 'An error occurred while fetching studies.'}
+          onRetry={refetch}
         />
       </div>
     );
@@ -66,20 +67,27 @@ const Studies: React.FC = () => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Studies</h1>
+          <h1 className="text-3xl font-bold text-gray-100">Studies</h1>
           <p className="text-gray-400 mt-1">
-            {data?.total || 0} total studies
+            Manage and review medical imaging studies ({data?.total || 0} total)
           </p>
         </div>
-        <button
-          onClick={handleCreateStudy}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <Plus size={18} />
-          Create Study
-        </button>
+        <div className="flex gap-3">
+          <Link to="/studies/upload">
+            <FormButton>
+              <span className="mr-2">📤</span>
+              Upload DICOM
+            </FormButton>
+          </Link>
+          <Link to="/studies/create">
+            <FormButton>
+              <span className="mr-2">+</span>
+              Create Study
+            </FormButton>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

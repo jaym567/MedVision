@@ -1,12 +1,106 @@
 // frontend/src/pages/StudyDetail.tsx
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Calendar, Activity, FileText, Brain, Stethoscope, MessageSquare } from 'lucide-react';
 import { useStudy } from '../hooks/useStudy';
+import { Study } from '../types/study';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorState from '../components/ErrorState';
 import StatusBadge from '../components/StatusBadge';
 import { formatPatientName, formatMRN, formatModality } from '../utils/formatting';
 import { formatDate, formatDateTime, calculateAge } from '../utils/date';
+
+const DicomMetadataCard: React.FC<{ study: Study }> = ({ study }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (study.source !== 'dicom_upload' || !study.metadata_json) {
+    return null;
+  }
+
+  const metadata = study.metadata_json as Record<string, unknown>;
+
+  const keyFields = [
+    {
+      label: 'Study Instance UID',
+      value: metadata.study_instance_uid as string,
+      truncate: true,
+    },
+    {
+      label: 'Series Instance UID',
+      value: metadata.series_instance_uid as string,
+      truncate: true,
+    },
+    {
+      label: 'SOP Instance UID',
+      value: metadata.sop_instance_uid as string,
+      truncate: true,
+    },
+    { label: 'Manufacturer', value: metadata.manufacturer as string },
+    {
+      label: 'Image Dimensions',
+      value:
+        metadata.rows && metadata.columns
+          ? `${metadata.rows} × ${metadata.columns}`
+          : undefined,
+    },
+    {
+      label: 'Window Center/Width',
+      value:
+        metadata.window_center && metadata.window_width
+          ? `${metadata.window_center} / ${metadata.window_width}`
+          : undefined,
+    },
+  ];
+
+  return (
+    <div className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-100">
+          DICOM Metadata
+        </h3>
+        <span className="px-2 py-1 bg-blue-900/30 text-blue-400 text-xs font-medium rounded">
+          DICOM
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {keyFields.map(
+          (field) =>
+            field.value && (
+              <div key={field.label}>
+                <dt className="text-xs text-gray-500 uppercase tracking-wider">
+                  {field.label}
+                </dt>
+                <dd
+                  className="text-sm text-gray-300 mt-1"
+                  title={field.truncate ? (field.value as string) : undefined}
+                >
+                  {field.truncate && (field.value as string).length > 30
+                    ? `${(field.value as string).substring(0, 30)}...`
+                    : String(field.value)}
+                </dd>
+              </div>
+            )
+        )}
+      </div>
+
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="mt-4 text-sm text-blue-400 hover:text-blue-300 underline"
+      >
+        {isExpanded ? 'Hide' : 'Show'} full metadata
+      </button>
+
+      {isExpanded && (
+        <div className="mt-4 p-4 bg-gray-900 rounded border border-gray-700">
+          <pre className="text-xs text-gray-400 overflow-auto max-h-96">
+            {JSON.stringify(metadata, null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const StudyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -114,6 +208,9 @@ const StudyDetail: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* DICOM Metadata Card */}
+          <DicomMetadataCard study={study} />
 
           {/* Study Details Card */}
           <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
